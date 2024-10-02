@@ -1,0 +1,33 @@
+import numpy as np
+import pyquil
+
+# Define the problem
+database = [0, 1, 0, 1, 0, 0, 0, 1]  # Example database with 3 marked items
+n = len(database)
+
+# Create a quantum circuit
+circuit = pyquil.Program()
+
+# Initialize the qubits
+qubits = pyquil.Program().declare(n)
+circuit += qubits.initialize(np.array([1 / np.sqrt(n)] * n))
+
+# Apply Grover's iteration
+for _ in range(int(np.pi / 4 * np.sqrt(n))):
+    circuit += (pyquil.gates.H * n)
+    circuit += pyquil.gates.X * n
+    circuit += pyquil.gates.H * n
+    circuit += pyquil.gates.Z(qubits[0])
+    circuit += pyquil.gates.H * n
+
+# Measure the qubits
+result = pyquil.Program().measure(qubits)
+circuit += result
+
+# Run the circuit on a quantum simulator or hardware
+quantum_computer = pyquil.get_qc("qvm")
+executed_circuit = quantum_computer.run(circuit)
+
+# Analyze the results
+measurements = executed_circuit.readouts[0]
+print("Marked item index:", np.argmax(measurements))
